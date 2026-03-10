@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Discord Timestamp Generator</title>
+  <link rel="icon" href="https://assets-global.discord.com/icons/favicon.ico"/>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap');
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Noto Sans',sans-serif;background:#1e1f22;color:#dbdee1;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;}
+    .card{background:#2b2d31;border-radius:8px;padding:32px;width:100%;max-width:680px;box-shadow:0 4px 24px rgba(0,0,0,.4);}
+    h1{font-size:1.3rem;font-weight:700;color:#f2f3f5;margin-bottom:6px;}
+    .subtitle{font-size:.9rem;color:#80848e;margin-bottom:28px;line-height:1.5;}
+    .row{display:flex;align-items:center;margin-bottom:16px;gap:16px;}
+    label{width:80px;font-size:.93rem;color:#b5bac1;flex-shrink:0;}
+    input[type=date],input[type=time],select{flex:1;background:#1e1f22;border:1px solid #3a3d44;border-radius:4px;color:#dbdee1;font-family:inherit;font-size:.93rem;padding:8px 12px;outline:none;transition:border-color .15s;}
+    input:focus,select:focus{border-color:#5865f2;}
+    select option{background:#2b2d31;}
+    .output-label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#80848e;margin-bottom:8px;margin-top:24px;}
+    .output-preview{font-size:1.05rem;color:#f2f3f5;margin-bottom:12px;min-height:24px;}
+    .output-row{display:flex;gap:8px;margin-bottom:10px;}
+    .code-box{flex:1;background:#1e1f22;border:1px solid #3a3d44;border-radius:4px;padding:8px 12px;font-family:'Courier New',monospace;font-size:.88rem;color:#dbdee1;cursor:text;user-select:all;}
+    .copy-btn{background:#4e5058;border:none;border-radius:4px;color:#f2f3f5;font-family:inherit;font-size:.88rem;font-weight:600;padding:8px 16px;cursor:pointer;transition:background .15s;white-space:nowrap;}
+    .copy-btn:hover{background:#6d6f78;}
+    .copy-btn.copied{background:#23a559;}
+    .reset-btn{width:100%;background:#4e5058;border:none;border-radius:4px;color:#f2f3f5;font-family:inherit;font-size:.9rem;font-weight:600;padding:10px;cursor:pointer;margin-top:20px;transition:background .15s;}
+    .reset-btn:hover{background:#6d6f78;}
+    .divider{height:1px;background:#3a3d44;margin:24px 0;}
+    .all-formats{display:grid;gap:8px;}
+    .fmt-row{display:flex;align-items:center;gap:10px;background:#1e1f22;border-radius:4px;padding:10px 12px;}
+    .fmt-preview{flex:1;font-size:.9rem;color:#c4c9d4;}
+    .fmt-code{font-family:'Courier New',monospace;font-size:.8rem;color:#80848e;flex:1;cursor:text;user-select:all;}
+    .fmt-copy{background:none;border:1px solid #4e5058;border-radius:4px;color:#b5bac1;font-size:.78rem;padding:4px 10px;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;}
+    .fmt-copy:hover{background:#4e5058;color:#f2f3f5;}
+    .fmt-copy.ok{border-color:#23a559;color:#23a559;}
+
+    /* JUMPSCARE BUTTON */
+    .scare-wrap{margin-top:28px;}
+    .scare-btn{
+      width:100%;padding:24px 0;
+      background:linear-gradient(135deg,#5865f2,#7289da);
+      border:none;border-radius:8px;
+      color:#fff;font-family:inherit;font-size:1.4rem;font-weight:700;
+      letter-spacing:.5px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:14px;
+      box-shadow:0 4px 20px rgba(88,101,242,.5);
+      transition:transform .12s,filter .12s;
+      animation:pulse 2s ease-in-out infinite;
+    }
+    .scare-btn:hover{transform:scale(1.02);filter:brightness(1.12);}
+    .scare-btn .bico{font-size:1.8rem;}
+    @keyframes pulse{
+      0%,100%{box-shadow:0 4px 20px rgba(88,101,242,.5);}
+      50%{box-shadow:0 4px 50px rgba(88,101,242,.9);}
+    }
+
+    /* SCARE OVERLAY */
+    #scare{
+      display:none;position:fixed;inset:0;
+      background:#000;z-index:9999;
+      align-items:center;justify-content:center;
+      cursor:pointer;
+    }
+    #scare.active{display:flex;animation:fl .06s steps(1) 7;}
+    @keyframes fl{0%,100%{background:#000;}50%{background:#fff;}}
+    #scare img{
+      width:100vw;height:100vh;object-fit:cover;
+      animation:pop .15s cubic-bezier(.17,.67,.35,1.5) both;
+    }
+    @keyframes pop{
+      from{transform:scale(0.05) rotate(-20deg);opacity:0;}
+      to{transform:scale(1) rotate(0deg);opacity:1;}
+    }
+    @keyframes shk{
+      0%,100%{transform:translate(0,0);}
+      10%{transform:translate(-14px,7px);}
+      25%{transform:translate(14px,-8px);}
+      40%{transform:translate(-10px,10px);}
+      55%{transform:translate(10px,-10px);}
+      70%{transform:translate(-5px,5px);}
+      85%{transform:translate(5px,-5px);}
+    }
+    body.shk{animation:shk .6s ease;}
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>Discord Timestamp Generator</h1>
+  <p class="subtitle">Genera códigos de tiempo dinámicos para tus mensajes de Discord. Elige la fecha y hora y copia el código.</p>
+
+  <div class="row">
+    <label>Fecha</label>
+    <input type="date" id="dateInput"/>
+  </div>
+  <div class="row">
+    <label>Hora</label>
+    <input type="time" id="timeInput"/>
+  </div>
+  <div class="row">
+    <label>Tipo</label>
+    <select id="typeSelect">
+      <option value="R">Relativo — hace X minutos</option>
+      <option value="t">Hora corta — 12:00</option>
+      <option value="T">Hora larga — 12:00:00</option>
+      <option value="d">Fecha corta — 10/03/2026</option>
+      <option value="D">Fecha larga — 10 de marzo de 2026</option>
+      <option value="f">Fecha y hora — 10 de marzo de 2026 12:00</option>
+      <option value="F">Completo — martes, 10 de marzo de 2026 12:00</option>
+    </select>
+  </div>
+
+  <div class="output-label">Vista previa</div>
+  <div class="output-preview" id="preview">—</div>
+  <div class="output-row">
+    <div class="code-box" id="codeBox">&lt;t:0:R&gt;</div>
+    <button class="copy-btn" id="mainCopy" onclick="copyMain()">Copiar</button>
+  </div>
+  <button class="reset-btn" onclick="resetToNow()">↺ Restablecer a hora actual</button>
+
+  <div class="divider"></div>
+  <div class="output-label">Todos los formatos</div>
+  <div class="all-formats" id="allFormats"></div>
+
+  <div class="scare-wrap">
+    <div class="divider"></div>
+    <button class="scare-btn" onclick="triggerScare()">
+      <span class="bico">▶</span> Comenzar
+    </button>
+  </div>
+</div>
+
+<!-- SCARE OVERLAY -->
+<div id="scare" onclick="closeScare()">
+  <img id="scareImg" src="" alt=""/>
+</div>
+
+<script>
+  // Imagen incrustada en base64
+  const SCARE_IMG = "data:image/jpeg;base64,SCARE_BASE64_PLACEHOLDER";
+
+  const formats=[
+    {flag:'R',label:'Relativo'},
+    {flag:'t',label:'Hora corta'},
+    {flag:'T',label:'Hora larga'},
+    {flag:'d',label:'Fecha corta'},
+    {flag:'D',label:'Fecha larga'},
+    {flag:'f',label:'Fecha y hora'},
+    {flag:'F',label:'Completo'},
+  ];
+
+  function getTimestamp(){
+    const d=document.getElementById('dateInput').value;
+    const t=document.getElementById('timeInput').value;
+    if(!d||!t)return Math.floor(Date.now()/1000);
+    return Math.floor(new Date(`${d}T${t}`).getTime()/1000);
+  }
+
+  function formatPreview(ts,flag){
+    const date=new Date(ts*1000);
+    const now=Date.now();
+    const diff=Math.round((ts*1000-now)/1000);
+    const locale='es-ES';
+    if(flag==='R'){
+      const abs=Math.abs(diff),past=diff<0;
+      if(abs<60)return past?`hace ${abs} segundo${abs!==1?'s':''}`:`en ${abs} segundo${abs!==1?'s':''}`;
+      if(abs<3600){const m=Math.round(abs/60);return past?`hace ${m} minuto${m!==1?'s':''}`:`en ${m} minuto${m!==1?'s':''}`;}
+      if(abs<86400){const h=Math.round(abs/3600);return past?`hace ${h} hora${h!==1?'s':''}`:`en ${h} hora${h!==1?'s':''}`;}
+      if(abs<2592000){const dy=Math.round(abs/86400);return past?`hace ${dy} día${dy!==1?'s':''}`:`en ${dy} día${dy!==1?'s':''}`;}
+      if(abs<31536000){const mo=Math.round(abs/2592000);return past?`hace ${mo} mes${mo!==1?'es':''}`:`en ${mo} mes${mo!==1?'es':''}`;}
+      const yr=Math.round(abs/31536000);return past?`hace ${yr} año${yr!==1?'s':''}`:`en ${yr} año${yr!==1?'s':''}`;
+    }
+    if(flag==='t')return date.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'});
+    if(flag==='T')return date.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    if(flag==='d')return date.toLocaleDateString(locale);
+    if(flag==='D')return date.toLocaleDateString(locale,{day:'numeric',month:'long',year:'numeric'});
+    if(flag==='f')return date.toLocaleDateString(locale,{day:'numeric',month:'long',year:'numeric'})+' '+date.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'});
+    if(flag==='F')return date.toLocaleDateString(locale,{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' '+date.toLocaleTimeString(locale,{hour:'2-digit',minute:'2-digit'});
+    return '';
+  }
+
+  function update(){
+    const ts=getTimestamp();
+    const flag=document.getElementById('typeSelect').value;
+    document.getElementById('codeBox').textContent=`<t:${ts}:${flag}>`;
+    document.getElementById('preview').textContent=formatPreview(ts,flag);
+    renderAll(ts);
+  }
+
+  function renderAll(ts){
+    const c=document.getElementById('allFormats');
+    c.innerHTML='';
+    formats.forEach(f=>{
+      const code=`<t:${ts}:${f.flag}>`;
+      const preview=formatPreview(ts,f.flag);
+      const div=document.createElement('div');
+      div.className='fmt-row';
+      div.innerHTML=`
+        <span class="fmt-preview">${preview}</span>
+        <span class="fmt-code">${esc(code)}</span>
+        <button class="fmt-copy" onclick="copyText('${esc(code)}',this)">Copiar</button>`;
+      c.appendChild(div);
+    });
+  }
+
+  function esc(s){return s.replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  function copyText(text,btn){
+    navigator.clipboard.writeText(text).then(()=>{
+      btn.textContent='✓ Copiado';btn.classList.add('ok');
+      setTimeout(()=>{btn.textContent='Copiar';btn.classList.remove('ok');},1500);
+    });
+  }
+
+  function copyMain(){
+    const text=document.getElementById('codeBox').textContent;
+    const btn=document.getElementById('mainCopy');
+    navigator.clipboard.writeText(text).then(()=>{
+      btn.textContent='✓ Copiado!';btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent='Copiar';btn.classList.remove('copied');},1500);
+    });
+  }
+
+  function resetToNow(){
+    const now=new Date();
+    const pad=n=>String(n).padStart(2,'0');
+    document.getElementById('dateInput').value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+    document.getElementById('timeInput').value=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    update();
+  }
+
+  // JUMPSCARE
+  function triggerScare(){
+    // Sonido fuertísimo
+    try{
+      const ctx=new(window.AudioContext||window.webkitAudioContext)();
+      const mk=(type,freq,gain,dur,ramp)=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type=type;o.frequency.setValueAtTime(freq,ctx.currentTime);
+        if(ramp)o.frequency.exponentialRampToValueAtTime(ramp,ctx.currentTime+dur);
+        g.gain.setValueAtTime(gain,ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);
+        o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+dur);
+      };
+      mk('sawtooth',980,5,2.5,150);
+      mk('sine',55,6,0.7);
+      mk('square',440,2,1.8,90);
+      const buf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);
+      const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+      const ns=ctx.createBufferSource(),ng=ctx.createGain();
+      ns.buffer=buf;ng.gain.setValueAtTime(4,ctx.currentTime);
+      ng.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+2);
+      ns.connect(ng);ng.connect(ctx.destination);ns.start();
+    }catch(e){}
+
+    if(navigator.vibrate)navigator.vibrate([600,80,600,80,1200]);
+    document.body.classList.add('shk');
+    setTimeout(()=>document.body.classList.remove('shk'),700);
+
+    document.getElementById('scareImg').src=SCARE_IMG;
+    document.getElementById('scare').classList.add('active');
+  }
+
+  function closeScare(){
+    document.getElementById('scare').classList.remove('active');
+    document.getElementById('scareImg').src='';
+  }
+
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeScare();});
+  document.getElementById('dateInput').addEventListener('input',update);
+  document.getElementById('timeInput').addEventListener('input',update);
+  document.getElementById('typeSelect').addEventListener('change',update);
+  resetToNow();
+  setInterval(update,30000);
+</script>
+</body>
+</html>
